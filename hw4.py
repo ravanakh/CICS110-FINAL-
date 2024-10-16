@@ -1,4 +1,4 @@
-import random
+import random #ravan
 def prompt():
     print("\t\t\tWelcome to Our Game\n\n"
           "\tYou have to defeat all bosses on 3 stages to Complete the Game!")
