@@ -1,29 +1,30 @@
-import random #ravan
+import random
+
 def prompt():
     print("\t\t\tWelcome to Our Game\n\n"
-          "\tYou have to defeat all bosses on 3 stages to Complete the Game!")
-    start_the_game = input("\t\t\tPress any ket to continue")
+          "\tYou have to defeat all bosses on 3 stages to complete the game!")
+    input("\t\t\tPress any key to continue")
 
-
-prompt()
 def chest():
-    chest_items = ["Health Potion", "Greater Health Potion", "Mana Potion", "Greater Mana Potion", "Stamina Potion", "Greater Stamina Potion", "Elixir of Strength", "Elixir of Defense", "Rusty Sword (1★)", "Iron Sword (2★)", "Steel Sword (3★)", "Enchanted Blade (4★)", "Mythic Sword (5★)", "Full Restore"]
-    drop_chances = [
-    30,  #Health Potion 
-    15,  #Greater Health Potion 
-    30,  #Mana Potion 
-    15,  #Greater Mana Potion 
-    35,  #stamina
-    15,  #greater stamina
-    10,  #el of strenght
-    10,  #el of defense
-    25,  #Rusty Sword 
-    12,  #Iron Sword 
-    10,  #Steel Sword  
-    5,   #enchanted blade 4 stars
-    3, #mythic blade 5 star
-    8,  #full restore of health
-    ]
-    dropped_item = ', '.join(random.choices(chest_items, weights=drop_chances, k=3))
-    print(f'WOW, you got: {dropped_item}')
+    # Dictionary with items as keys and drop chances as values
+    chest_items = {
+        "Health Potion": 30,
+        "Greater Health Potion": 15,
+        "Mana Potion": 30,
+        "Greater Mana Potion": 15,
+        "Stamina Potion": 35,
+        "Greater Stamina Potion": 15,
+        "Elixir of Strength": 10,
+        "Elixir of Defense": 10,
+        "Rusty Sword (1★)": 25,
+        "Iron Sword (2★)": 12,
+        "Steel Sword (3★)": 10,
+        "Enchanted Blade (4★)": 5,
+        "Mythic Sword (5★)": 3,
+        "Full Restore": 8
+    }
+    
+
+dropped_items = ', '.join(random.choices(list(chest_items.keys()), weights=chest_items.values(), k=3))
+print(f'WOW, you got: {dropped_items}')
 
