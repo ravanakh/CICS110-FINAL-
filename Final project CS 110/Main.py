@@ -8,7 +8,7 @@ pygame.display.set_caption("Menu")
 
 BG = pygame.image.load("assets/png1.png")
 
-def get_font(size): # Returns Press-Start-2P in the desired size
+def get_font(size): 
     return pygame.font.Font("assets/font.ttf", size)
 
 def play():

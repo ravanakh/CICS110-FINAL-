@@ -1,4 +1,7 @@
 import random
+from Enemy_Boss import Enemy
+from Weapon import Weapon
+
 class Player():
     health = 100
     damage = 10
@@ -8,6 +11,7 @@ class Player():
     
     def __init__ (self,health,damage,max_hp,defense):
         self.health = health
+        self.max_hp = max_hp
         self.damage = damage 
         self.current_hp = max_hp
         self.defense = defense
@@ -20,6 +24,7 @@ class Player():
         self.ultimate_used = False
         self.turns_charging = 0
         self.current_weapon = Weapon("Basic Sword",'common',5,1)
+        self.alive = True
         
 
     def got_hit(self,enemy_damage):
@@ -38,7 +43,11 @@ class Player():
         self.inventory.append(potion)
         
     def use_potion(self):
-        
+        if self.inventory:
+            potion_hp = self.inventory.pop(0)
+        else:
+            return "No potions left in your inventory!"
+
         if self.inventory:
             potion_hp = self.inventory.pop(0)
             healed_amount = min(potion_hp,self.max_hp - self.current_hp)
@@ -71,25 +80,24 @@ class Player():
     
     def increment_turn(self):
         self.turns_charging += 1
-        if self.turns_charning > 8 and self.damage >= 100:
+        if self.turns_charging > 8 and self.damage >= 100:
             self.ultimate_ready = True
-            print(f'Your ultimate has been charged')
+            print('Your ultimate has been charged!')
             
             
-    def ultimate_attack(self,enemy):
+    def ultimate_attack(self, enemy):
         if not self.ultimate_ready:
-            return f'Your ultimate attack is not ready yet'
+            return "Your ultimate attack is not ready yet!"
         if self.ultimate_used:
-            return f'You can only use your ultimate once per room'
+            return "You can only use your ultimate once per room."
+
+        multiplier = random.randint(2, 10)
+        ultimate_damage = max(0, self.damage * multiplier - enemy.defense)
         
-        n = random.randint(2,10)
-        b = 1
-        ultimate_damage = max(0,self.damamge*n*b - enemy.defense)
-        self.ultimate_ready = False
-        self.ultimate_used = True
-        self.turns_charging = 0
-        result = enemy.take_damage(ultimate_damage)
-        return f'You have used your ultimate attack and have dealt {n} times your damage, causing {result} done on the enemy'
+        enemy.take_damage(ultimate_damage)
+        self.reset_ultimate_attack()
+        
+        return f"You used your ultimate and dealt {ultimate_damage} damage!"
     
     def reset_ultimate_attack(self):
         self.ultimate_used = False
@@ -120,7 +128,7 @@ class Player():
             self.blessing[chosen_buff] += 1
         else:
             self.blessing[chosen_buff] = 1
-        print(f"You have chosen: {chosen_buff}. You now have {self.blessings[chosen_buff]} of this blessing.")     
+        print(f"You have chosen: {chosen_buff}. You now have {self.blessing[chosen_buff]} of this blessing.")     
     
         self.stage +=1
         print(f"Stage {self.stage} completed! You gained a new blessing, the blessing is: {self.blessing}.")
@@ -155,16 +163,16 @@ class Player():
                 print('You have become faster, but you are more vunerable to attacks')
         elif chosen_buff == 'Blessing of strength':
             self.damage += random.randint(10,15)
-            self.max_hp += random.randit(10,15)
+            self.max_hp += random.randint(10,15)
             self.defense += 5
-            self.dodge_chance -= random.randit(0,.03)
+            self.dodge_chance -= random.randint(0,.03)
             print('You have become stronger, but have become slower')
       
         elif chosen_buff == 'Blessing of soul':
             self.damage += random.randint(5,10)
-            self.max_hp += random.randit(10,20)
+            self.max_hp += random.randint(10,20)
             self.defense += 10
-            self.dodge_chance += random.randit(0,.03)
+            self.dodge_chance += random.randin(0,.03)
             print('Overall boost have applied')
        
         elif chosen_buff == 'Blessing of iron':
@@ -175,12 +183,12 @@ class Player():
             print(f'You have gained large amounts of strength, but gotten much slower')
       
         elif chosen_buff == 'Blessing of the moon':
-            self.b += 0.25
-            self.damage += 30
+            damage_boost = 30
+            self.damage += damage_boost
             self.defense -= 10
             self.max_hp += 10
-            self.dodge_chance += 0.05
-            print(f'You are the one under the moon')
+            self.dodge_chance = min(0.75, self.dodge_chance + 0.05)
+            print(f"You have gained {damage_boost} damage but sacrificed some defense.")
             
         elif chosen_buff == 'Blessing of the sun':
             self.damage *= 1.25
@@ -215,65 +223,35 @@ class Player():
             self.damage *= 10
             self.dodge_chance = 0.75
             print(f'You have been blessed by Gods, May your journy be full of success')
+    
+    def is_alive(self):
+        self.alive = self.health > 0 
+        return self.alive
+    
+    def open_chest(self, chest):
+        new_weapon = chest.weapon  
+        new_weapon_damage = new_weapon.calculate_damage()
 
-class Weapon ():
-    
-    def __init__(self,name,rarity,base_damage,room_level):
-           self.name = name
-           self.rarity = rarity 
-           self.base_damage = base_damage
-           self.room_level = room_level        
-            
-    def caculate_damage(self):
-        rarity_multiplier = {
-            'Common':  1.0,
-            'Uncommon': 1.2,
-            'Rare' : 1.5,
-            'Epic' : 2.0,
-            'Legendary' : 3.0
-        }
-        return int(self.base_damage*rarity_multiplier[self.rarity]*(1+self.room_level//10))
-    
-    def __str__(self):
-        return  f"{self.name} ({self.rarity}) - Damage: {self.total_damage}"
-    
-    
-    
-class Chest():
-    
-    def __init__(self,room_level):
-        self.room_level = room_level
-        self.weapon = self.generate_random_weapon()
-        self.potion = self.generate_random_potion()
+        current_weapon_damage = self.current_weapon.calculate_damage()
+        print("A chest has been opened!")
+        print(f"Inside, you find a new weapon: {new_weapon} - Damage: {new_weapon_damage}")
+        print(f"Your current weapon: {self.current_weapon} - Damage: {current_weapon_damage}")
+        choice = None
+        while choice not in ["yes", "no"]:
+            choice = input("Do you want to replace your current weapon with this one? (yes/no): ").lower()
+            if choice not in ["yes", "no"]:
+                print("Please respond with 'yes' or 'no'.")
+
+
+        if choice == "yes":
+            self.current_weapon = new_weapon
+            print(f"You have equipped the new weapon: {self.current_weapon} - Damage: {new_weapon_damage}")
+        else:
+            print(f"You decided to keep your current weapon. The {new_weapon} has been discarded.")
         
-    def generate_random_weapon(self):
-        rarities  = ['Common','Uncommon','Rare',"Epic",'Legendary']
-        rarity_weights = [50,30,15,4,1]
-        chosen_rarity = random.choices(rarities, weights=rarity_weights, k=1)[0]
-        
-        weapon_names = {
-            "Common": ["Rusty Sword", "Wooden Club","Wooden Sword"],
-            "Uncommon": ["Iron Sword", "Steel Dagger",'Iron Staff'],
-            "Rare": ["Elven Blade", "Orcish War Axe","Refined Longsword"],
-            "Epic": ["Dragon Slayer", "Shadow Fang","Entangled Staff0"],
-            "Legendary": ["Excalibur", "Godslayer","Demon's Lust"],
-        }
-        name = random.choice(weapon_names[chosen_rarity])
-        base_damage = random.randint(5,20)
-        return Weapon(name, chosen_rarity, base_damage, self.room_level)
-        
+
     
+
            
-class Enemy():
-    def __init__(self, name, health, damage, defense):
-        self.name = name
-        self.health = health
-        self.damage = damage
-        self.defense = defense
-    
-    def take_damage(self, amount):
-        self.health -= amount
-        if self.health <= 0:
-            return f"{self.name} has been defeated!"
-        return f"{self.name} has {self.health} HP remaining."
+
     
