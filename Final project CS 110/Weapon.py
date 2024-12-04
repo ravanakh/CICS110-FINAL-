@@ -7,7 +7,7 @@ class Weapon():
         self.rarity = rarity
         self.base_damage = base_damage
         self.room_level = room_level        
-        self.damage = self.calculate_damage()  # Calculate damage on initialization
+        self.damage = self.calculate_damage() 
     
     def calculate_damage(self):
         rarity_multiplier = {
@@ -21,7 +21,7 @@ class Weapon():
         if self.rarity not in rarity_multiplier:
             raise ValueError(f"Invalid rarity '{self.rarity}'. Expected one of {list(rarity_multiplier.keys())}")
 
-        return int(self.base_damage * rarity_multiplier[self.rarity] * (1 + self.room_level // 10))
+        return int(self.base_damage * rarity_multiplier[self.rarity] * (1 + self.room_level // 10)* random.randint(2,5))
     
     def __str__(self):
-        return f"{self.name} ({self.rarity}) - Damage: {self.damage}"  # Use stored damage instead of recalculating
+        return f"{self.name} ({self.rarity}) - Damage: {self.damage}" 

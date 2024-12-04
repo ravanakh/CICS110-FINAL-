@@ -38,7 +38,7 @@ class Player():
         else:
             reduce_damage = max(0, enemy_damage - self.defense)
             self.health -= reduce_damage
-            if self.health < 0:  # Ensure health doesn't go below 0
+            if self.health < 0: 
                 self.health = 0
             return f"You took {reduce_damage} damage."
         
@@ -85,7 +85,9 @@ class Player():
             return f"You failed to dodge the attack and took {failed_dodge_damage:.1f} damage."
 
     def attack(self, enemy):
-        # Calculate actual damage dealt considering the enemy's defense
+        
+        if enemy.try_dodge():
+            return f"{enemy.name} dodged your attack!"
         damage_dealt = max(0, self.damage - enemy.defense)
         enemy.take_damage(damage_dealt)
         self.increment_turn()
@@ -105,7 +107,7 @@ class Player():
         if self.ultimate_used:
             return "You can only use your ultimate once per room."
 
-        ultimate_damage = self.damage * 5  # Fixed multiplier of 5
+        ultimate_damage = self.damage * 5 
         ultimate_damage = max(0, ultimate_damage - enemy.defense)
         enemy.take_damage(ultimate_damage)
         self.reset_ultimate_attack()
@@ -151,7 +153,6 @@ class Player():
     
     
     def random_buff_apply(self):
-        # Probabilities for each buff, ensuring they add up to 1 (or 100%)
         buff_chances = {
             'Blessing of earth': 0.2,  # 20% chance
             'Blessing of wind': 0.15,  # 15% chance
@@ -160,16 +161,13 @@ class Player():
             'Blessing of iron': 0.1,  # 10% chance
             'Blessing of the moon': 0.05,  # 5% chance
             'Blessing of the sun': 0.05,  # 5% chance
-            'Blessing of demon': 0.01,  # 1% chance (rare)
-            'Unknown Blessing': 0.01,  # 1% chance (rare)
-            'Cursed being': 0.05,  # 5% chance
-            'Gods favor': 0.1  # 10% chance
+            'Blessing of demon': 0.02,  # 2% chance
+            'Unknown Blessing': 0.02,  # 2% chance 
+            'Cursed being': 0.005,  # 0.5% chance
+            'Gods favor': 0.005  # 0.5% chance
         }
-
-        # Use random.choices() to select 2 unique buffs based on the weights
         buff_choices = random.choices(list(buff_chances.keys()), weights=list(buff_chances.values()), k=2)
         
-        # Ensure the same buff is not selected twice
         while buff_choices[0] == buff_choices[1]:
             buff_choices = random.choices(list(buff_chances.keys()), weights=list(buff_chances.values()), k=2)
         
@@ -177,16 +175,16 @@ class Player():
 
     def apply_buff(self, chosen_buff):
         if chosen_buff == 'Blessing of earth':
-            health_boost = random.randint(10, 30)
+            health_boost = random.randint(15, 35)
             self.max_hp += health_boost
-            self.defense += 5
+            self.defense += 10
             self.dodge_chance -= 0.05
             print(f'You have gained {health_boost} amount of health, but you got slower')
 
         elif chosen_buff == "Blessing of wind":
             self.dodge_chance += 0.15
-            self.max_hp -= 10
-            self.defense -= 3
+            self.max_hp -= 20
+            self.defense -= 10
             if self.dodge_chance > 0.75:
                 self.dodge_chance = 0.75
                 print(f'Dodge chance has reached the max, cannot increase any further. This buff can no longer be obtained.')
@@ -194,8 +192,8 @@ class Player():
                 print('You have become faster, but you are more vulnerable to attacks')
 
         elif chosen_buff == 'Blessing of strength':
-            self.damage += random.randint(10, 15)
-            self.max_hp += random.randint(10, 15)
+            self.damage += random.randint(10, 20)
+            self.max_hp += random.randint(20, 50)
             self.defense += 5
             self.dodge_chance -= random.uniform(0, 0.03)
             print('You have become stronger, but have become slower')
@@ -208,36 +206,36 @@ class Player():
             print('Overall boost has applied')
 
         elif chosen_buff == 'Blessing of iron':
-            self.max_hp += 40
-            self.defense += 10
+            self.max_hp += 60
+            self.defense += 20
             self.damage += random.randint(10, 20)
             self.dodge_chance -= 0.15
             print(f'You have gained large amounts of strength, but gotten much slower')
 
         elif chosen_buff == 'Blessing of the moon':
-            damage_boost = 30
+            damage_boost = 40
             self.damage += damage_boost
-            self.defense -= 10
-            self.max_hp += 10
+            self.defense -= 15
+            self.max_hp += 60
             self.dodge_chance = min(0.75, self.dodge_chance + 0.05)
             print(f"You have gained {damage_boost} damage but sacrificed some defense.")
 
         elif chosen_buff == 'Blessing of the sun':
-            self.damage *= 1.25
-            self.max_hp *= 1.15
+            self.damage *= 1.17
+            self.max_hp *= 1.12
             self.defense += 10
             print(f"You have absorbed some of the sun's energy, You feel powerful")
 
         elif chosen_buff == 'Blessing of demon':
-            self.damage *= 1.75
-            self.max_hp *= 2
+            self.damage *= 1.25
+            self.max_hp *= 1.55
             self.defense -= 100
             self.dodge_chance = 0.1
             print(f'You have made a deal with the devil. You have become unbelievably strong, but at what cost?!.....')
 
         elif chosen_buff == 'Unknown Blessing':
             self.damage += random.randint(0, 50)
-            self.defense += random.randint(0, 100)
+            self.defense += random.randint(0, 50)
             self.dodge_chance = 0.75
             self.max_hp *= 1.5
             print(f'yOUOUou AreeeEEe The bLesSed ONe................')
@@ -246,11 +244,11 @@ class Player():
             self.defense = 0
             self.max_hp *= 5
             self.damage *= 3
-            self.dodge_chance -= 0.05
+            self.dodge_chance -= 0.15
             print(f'This will be a wonderful gamble, what do you say !>?')
 
         elif chosen_buff == 'Gods favor':
-            self.defense += 150
+            self.defense += 130
             self.max_hp *= 5
             self.damage *= 10
             self.dodge_chance = 0.75
@@ -260,11 +258,9 @@ class Player():
         return self.health > 0
     
     def open_chest(self, chest):
-        # Get the drop from the chest (either weapon or potion)
         drop = chest.get_drop()
 
         if isinstance(drop, Weapon):
-            # Handle weapon drop
             new_weapon = drop
             print("A chest has been opened!")
             print(f"Inside, you find a new weapon: {new_weapon.name} - Damage: {new_weapon.damage}")
@@ -283,7 +279,6 @@ class Player():
                 print(f"You decided to keep your current weapon. The {new_weapon.name} has been discarded.")
         
         elif isinstance(drop, dict):  # It's a potion
-            # Handle potion drop
             potion = drop
             self.add_potion(potion)
             print(f"You received a {potion['name']}!")

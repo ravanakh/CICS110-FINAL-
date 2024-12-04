@@ -11,12 +11,12 @@ class PlayGame:
 
     def start_game(self):
         print("\nLet the dungeon adventure begin!")
-        while self.current_stage <= 2:  # Two stages, each with 8 rooms
-            for self.current_room in range(1, 9):  # 8 rooms per stage
+        while self.current_stage <= 2:
+            for self.current_room in range(1, 9): 
                 print(f"\nEntering Room {self.current_room} on Stage {self.current_stage}...")
                 self.handle_room()
 
-            # Check if we're in Stage 2, Room 8 to end the game after this room
+            # Check for second stage
             if self.current_stage == 2 and self.current_room == 8:
                 print("\nCongratulations! You have conquered the dungeon!")
                 return  # End the game after Stage 2, Room 8
@@ -24,13 +24,11 @@ class PlayGame:
             self.current_stage += 1
 
     def handle_room(self):
-        # Create an instance of Enemy (temporary dummy values just to create the instance)
         enemy = Enemy("dummy", 0, 0, 0)
-        # Now, call assign_to_room() on the enemy instance
         enemy_instance = enemy.assign_to_room(self.current_stage, self.current_room, self.player)
 
         if not enemy_instance:
-            print("Error: No enemy generated!")  # This error shouldn't occur if the enemy is generated properly
+            print("Error: No enemy generated!") 
             exit()
 
         print(enemy_instance.render_stats())
@@ -44,7 +42,7 @@ class PlayGame:
 
         print(f"Room {self.current_room} cleared!")
 
-        # If this is Stage 2, Room 8, skip reward and chest drops
+        # If this is Stage 2, Room 8, code will skip reward and chest drops
         if not (self.current_stage == 2 and self.current_room == 8):
             self.reward_player()
     
@@ -58,7 +56,6 @@ class PlayGame:
         
     def handle_boss(self, final_boss=False):
         if final_boss:
-            # Pass both stage and room_number to create_boss
             enemy = Enemy.create_boss(self.current_stage, self.current_room)
         else:
             enemy = Enemy.assign_to_room(self.current_stage, self.current_room, self.player)
@@ -77,10 +74,10 @@ class PlayGame:
             self.reward_player()
     
     def display_health_bar(self, health, max_health):
-        bar_length = 20  # Length of the health bar
-        filled_length = int(bar_length * health // max_health)  # Calculate how much of the bar should be filled
-        bar = '█' * filled_length + '-' * (bar_length - filled_length)  # Create the health bar
-        health_percentage = (health / max_health) * 100  # Calculate health percentage
+        bar_length = 20  
+        filled_length = int(bar_length * health // max_health)  
+        bar = '█' * filled_length + '-' * (bar_length - filled_length)  
+        health_percentage = (health / max_health) * 100 
         return f"[{bar}] {health}/{max_health} ({health_percentage:.0f}%)"
         
     def handle_turn(self, enemy):
@@ -98,9 +95,19 @@ class PlayGame:
 
         # Player's turn
         print("\nYour turn!")
+        print(f"Ultimate Charge: {self.player.turns_charging}/8 (Ready: {self.player.ultimate_ready})")
+
+        # Give ptions
+        print("Choose an action:")
+        print("1. Attack")
+        print("2. Dodge")
+        print("3. Use Potion")
+        if self.player.ultimate_ready and not self.player.ultimate_used:  
+            print("4. Use Ultimate Attack")
+
         choice = None
-        while choice not in ["1", "2", "3"]:
-            choice = input("Choose an action (1, 2, 3): ")
+        while choice not in ["1", "2", "3", "4"]:  
+            choice = input("Choose an action (1, 2, 3, 4): ")
             if choice == "1":
                 damage_dealt = self.player.attack(enemy)
                 print(damage_dealt)
@@ -108,24 +115,23 @@ class PlayGame:
                 print(self.player.dodge(enemy.damage))
             elif choice == "3":
                 self.player.use_potion()
+            elif choice == "4" and self.player.ultimate_ready and not self.player.ultimate_used:
+                print(self.player.ultimate_attack(enemy))  # Use the ultimate
             else:
-                print("Invalid choice, please select 1, 2, or 3.")
+                print("Invalid choice, please select 1, 2, 3, or 4.")
 
         # Enemy's turn
         if enemy.health > 0:
             print(f"\nEnemy's turn!")
-            print(self.player.got_hit(enemy.damage))  # Handle damage taken
+            print(self.player.got_hit(enemy.damage)) 
                     
     def reward_player(self):
-        # Apply a random buff
         print("\nYou have cleared the room! Time for a reward!")
         self.player.complete_stage_one()
 
-        # Generate and open a chest
         chest = Chest(room_level=self.current_room)
         self.player.open_chest(chest)
 
-        # Heal the player by 30% of their max health after completing the room
         heal_amount = self.player.max_hp * 0.30
-        self.player.health = min(self.player.max_hp, self.player.health + heal_amount)  # Ensure health doesn't exceed max
+        self.player.health = min(self.player.max_hp, self.player.health + heal_amount)  
         print(f"You have been healed for {heal_amount:.0f} HP!")
