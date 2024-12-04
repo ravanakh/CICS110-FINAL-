@@ -1,11 +1,12 @@
 import random
 from Enemy_Boss import Enemy
 from Weapon import Weapon
+import time
 
 class Player():
     health = 100
     damage = 10
-    defense = 0
+    defense = 5
     buffs = ['Blessing of earth',"Blesssing of wind",'Blessing of strength', 'Blessing of soul', 'Blessing of iron', 'Blessing of the moon','Blessing of the sun', 'Blessing of demon', 'Unknown Blessing','Cursed being', 'Gods favor' ]
 
     
@@ -23,66 +24,79 @@ class Player():
         self.ultimate_ready = False
         self.ultimate_used = False
         self.turns_charging = 0
-        self.current_weapon = Weapon("Basic Sword",'common',5,1)
+        self.current_weapon = Weapon("Basic Sword",'Common',5,1)
         self.alive = True
         
 
-    def got_hit(self,enemy_damage):
-        if self.is_blocking == True:
-            reduce_damage = max(0,enemy_damage//2)
-            reduce_damage = max(0,reduce_damage - self.defense)
+    def got_hit(self, enemy_damage):
+        if self.is_blocking:
+            reduce_damage = max(0, enemy_damage // 2)
+            reduce_damage = max(0, reduce_damage - self.defense)
             self.health -= reduce_damage
             self.is_blocking = False
             return f"You blocked! Took only {reduce_damage} damage."
         else:
-            reduce_damage = max(0,reduce_damage - self.defense)
-            self.health -= enemy_damage
-            return f"You took {enemy_damage} damage."
-    
-    def add_potion(self,potion):
+            reduce_damage = max(0, enemy_damage - self.defense)
+            self.health -= reduce_damage
+            if self.health < 0:  # Ensure health doesn't go below 0
+                self.health = 0
+            return f"You took {reduce_damage} damage."
+        
+    def add_potion(self, potion):
         self.inventory.append(potion)
+        print(f"Added {potion['name']} to your inventory!")
         
     def use_potion(self):
-        if self.inventory:
-            potion_hp = self.inventory.pop(0)
-        else:
+        if not self.inventory:
             return "No potions left in your inventory!"
 
-        if self.inventory:
-            potion_hp = self.inventory.pop(0)
-            healed_amount = min(potion_hp,self.max_hp - self.current_hp)
+        print("\nAvailable Potions:")
+        for idx, potion in enumerate(self.inventory, start=1):
+            print(f"{idx}. {potion['name']}")
+
+        choice = None
+        while choice not in range(1, len(self.inventory) + 1):
+            try:
+                choice = int(input(f"Choose a potion to use (1-{len(self.inventory)}): "))
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
+        selected_potion = self.inventory.pop(choice - 1)
+        if "Healing" in selected_potion['name']:
+            healed_amount = min(selected_potion['effect'], self.max_hp - self.current_hp)
             self.current_hp += healed_amount
-            if self.current_hp > self.max_hp:
-                self.current_hp = self.max_hp
-            return f"You have used a potion and heled for {healed_amount} HP. Current health: {self.current_hp}/{self.max_hp}"
-        else:
-            return "No potions left in your inventory!"
-            
+            print(f"You used {selected_potion['name']} and healed for {healed_amount} HP!")
+        elif "Defense" in selected_potion['name']:
+            self.defense += selected_potion['effect']
+            print(f"You used {selected_potion['name']} and gained {selected_potion['effect']} defense for this room!")
+                
     def block(self):
         self.is_blocking = True
         return "You raise your guard, preparing to block the next attack!"
     
-    def dodge(self,enemy_damage):
+    def dodge(self, enemy_damage):
         if self.dodge_chance <= 0:
-            return f'You can not evade'
+            return "You cannot evade!"
         if random.random() < self.dodge_chance:
-            return f' You have successfully dodged the attack!'
+            return "You successfully dodged the attack!"
         else:
-            enemy_damage *= 1.25
-            self.health -= enemy_damage
-            return f' You have failed to dodge the attack, and have taken {enemy_damage}'
+            failed_dodge_damage = enemy_damage * 1.25
+            self.health -= failed_dodge_damage
+            return f"You failed to dodge the attack and took {failed_dodge_damage:.1f} damage."
 
-    def attack(self,enemy):
-        damamge_dealt = max(0,self.damage-enemy.defense)
-        enemy.take_damage(damamge_dealt)
+    def attack(self, enemy):
+        # Calculate actual damage dealt considering the enemy's defense
+        damage_dealt = max(0, self.damage - enemy.defense)
+        enemy.take_damage(damage_dealt)
         self.increment_turn()
-        return f"You attacked {enemy.name} and dealt {damamge_dealt} damage!"
+
+        return f"You attacked {enemy.name} and dealt {damage_dealt} damage!"
     
     def increment_turn(self):
         self.turns_charging += 1
-        if self.turns_charging > 8 and self.damage >= 100:
+        if self.turns_charging >= 8:
             self.ultimate_ready = True
-            print('Your ultimate has been charged!')
+            print("Your ultimate is ready!")
             
             
     def ultimate_attack(self, enemy):
@@ -91,16 +105,15 @@ class Player():
         if self.ultimate_used:
             return "You can only use your ultimate once per room."
 
-        multiplier = random.randint(2, 10)
-        ultimate_damage = max(0, self.damage * multiplier - enemy.defense)
-        
+        ultimate_damage = self.damage * 5  # Fixed multiplier of 5
+        ultimate_damage = max(0, ultimate_damage - enemy.defense)
         enemy.take_damage(ultimate_damage)
         self.reset_ultimate_attack()
-        
+
         return f"You used your ultimate and dealt {ultimate_damage} damage!"
-    
+            
     def reset_ultimate_attack(self):
-        self.ultimate_used = False
+        self.ultimate_used = True
         self.ultimate_ready = False
         self.turns_charging = 0
         
@@ -116,12 +129,15 @@ class Player():
         
         choice = None
         while choice not in ['1','2']:
-            choice = input('Please announce your choice: 1 or 2')
+            choice = input('Please announce your choice: 1 or 2: ')
             
         if choice == '1':
             chosen_buff = buff1
         else:
             chosen_buff = buff2
+            
+        time.sleep(1)
+        
         self.apply_buff(chosen_buff)
             
         if chosen_buff in self.blessing:
@@ -133,55 +149,71 @@ class Player():
         self.stage +=1
         print(f"Stage {self.stage} completed! You gained a new blessing, the blessing is: {self.blessing}.")
     
-    def random_buff_apply(self):      
-        chance = [0.25,0.20,0.15,0.10,0.10,0.05,0.05,0.03,0.03,0.3,0.01]
+    
+    def random_buff_apply(self):
+        # Probabilities for each buff, ensuring they add up to 1 (or 100%)
+        buff_chances = {
+            'Blessing of earth': 0.2,  # 20% chance
+            'Blessing of wind': 0.15,  # 15% chance
+            'Blessing of strength': 0.1,  # 10% chance
+            'Blessing of soul': 0.1,  # 10% chance
+            'Blessing of iron': 0.1,  # 10% chance
+            'Blessing of the moon': 0.05,  # 5% chance
+            'Blessing of the sun': 0.05,  # 5% chance
+            'Blessing of demon': 0.01,  # 1% chance (rare)
+            'Unknown Blessing': 0.01,  # 1% chance (rare)
+            'Cursed being': 0.05,  # 5% chance
+            'Gods favor': 0.1  # 10% chance
+        }
+
+        # Use random.choices() to select 2 unique buffs based on the weights
+        buff_choices = random.choices(list(buff_chances.keys()), weights=list(buff_chances.values()), k=2)
         
-        buff_choices = random.choices(self.buffs, weights=chance, k=2)
-        while buff_choices[0] == buff_choices[1]: 
-            buff_choices = random.choices(self.buffs, weights=chance, k=2)
+        # Ensure the same buff is not selected twice
+        while buff_choices[0] == buff_choices[1]:
+            buff_choices = random.choices(list(buff_chances.keys()), weights=list(buff_chances.values()), k=2)
         
         return buff_choices[0], buff_choices[1]
-    
-    
-    def apply_buff(self,chosen_buff):
+
+    def apply_buff(self, chosen_buff):
         if chosen_buff == 'Blessing of earth':
-            health_boost = random.randint(10,30)   
+            health_boost = random.randint(10, 30)
             self.max_hp += health_boost
             self.defense += 5
             self.dodge_chance -= 0.05
-            print(f'You have gained {health_boost} amount of health, But you got slower')
-     
+            print(f'You have gained {health_boost} amount of health, but you got slower')
+
         elif chosen_buff == "Blessing of wind":
             self.dodge_chance += 0.15
             self.max_hp -= 10
             self.defense -= 3
             if self.dodge_chance > 0.75:
                 self.dodge_chance = 0.75
-                self.buffs.remove("Blessing of wind")
-                print(f'Dodge chance has reached the max, can not increase any further, this buff can no longer be obtained')
+                print(f'Dodge chance has reached the max, cannot increase any further. This buff can no longer be obtained.')
             else:
-                print('You have become faster, but you are more vunerable to attacks')
+                print('You have become faster, but you are more vulnerable to attacks')
+
         elif chosen_buff == 'Blessing of strength':
-            self.damage += random.randint(10,15)
-            self.max_hp += random.randint(10,15)
+            self.damage += random.randint(10, 15)
+            self.max_hp += random.randint(10, 15)
             self.defense += 5
-            self.dodge_chance -= random.randint(0,.03)
+            self.dodge_chance -= random.uniform(0, 0.03)
             print('You have become stronger, but have become slower')
-      
+
         elif chosen_buff == 'Blessing of soul':
-            self.damage += random.randint(5,10)
-            self.max_hp += random.randint(10,20)
+            self.damage += random.randint(5, 10)
+            self.max_hp += random.randint(10, 20)
             self.defense += 10
-            self.dodge_chance += random.randin(0,.03)
-            print('Overall boost have applied')
-       
+            self.dodge_chance += random.uniform(0, 0.03)
+            print('Overall boost has applied')
+
         elif chosen_buff == 'Blessing of iron':
             self.max_hp += 40
             self.defense += 10
-            self.damage += random.randint(10,20)
+            self.damage += random.randint(10, 20)
             self.dodge_chance -= 0.15
             print(f'You have gained large amounts of strength, but gotten much slower')
-      
+
         elif chosen_buff == 'Blessing of the moon':
             damage_boost = 30
             self.damage += damage_boost
@@ -189,66 +221,72 @@ class Player():
             self.max_hp += 10
             self.dodge_chance = min(0.75, self.dodge_chance + 0.05)
             print(f"You have gained {damage_boost} damage but sacrificed some defense.")
-            
+
         elif chosen_buff == 'Blessing of the sun':
             self.damage *= 1.25
             self.max_hp *= 1.15
             self.defense += 10
             print(f"You have absorbed some of the sun's energy, You feel powerful")
-            
+
         elif chosen_buff == 'Blessing of demon':
             self.damage *= 1.75
             self.max_hp *= 2
             self.defense -= 100
             self.dodge_chance = 0.1
-            print(f'You have made a deal with the devil. You have became unbelievablely strong, but at what cost?!.....')
-        
+            print(f'You have made a deal with the devil. You have become unbelievably strong, but at what cost?!.....')
+
         elif chosen_buff == 'Unknown Blessing':
-            self.damage += random.randint(0,50)
-            self.defense += random.randint(0,100)
+            self.damage += random.randint(0, 50)
+            self.defense += random.randint(0, 100)
             self.dodge_chance = 0.75
             self.max_hp *= 1.5
             print(f'yOUOUou AreeeEEe The bLesSed ONe................')
-        
+
         elif chosen_buff == 'Cursed being':
             self.defense = 0
             self.max_hp *= 5
             self.damage *= 3
             self.dodge_chance -= 0.05
             print(f'This will be a wonderful gamble, what do you say !>?')
-            
+
         elif chosen_buff == 'Gods favor':
             self.defense += 150
             self.max_hp *= 5
             self.damage *= 10
             self.dodge_chance = 0.75
-            print(f'You have been blessed by Gods, May your journy be full of success')
+            print(f'You have been blessed by Gods, May your journey be full of success')
     
     def is_alive(self):
-        self.alive = self.health > 0 
-        return self.alive
+        return self.health > 0
     
     def open_chest(self, chest):
-        new_weapon = chest.weapon  
-        new_weapon_damage = new_weapon.calculate_damage()
+        # Get the drop from the chest (either weapon or potion)
+        drop = chest.get_drop()
 
-        current_weapon_damage = self.current_weapon.calculate_damage()
-        print("A chest has been opened!")
-        print(f"Inside, you find a new weapon: {new_weapon} - Damage: {new_weapon_damage}")
-        print(f"Your current weapon: {self.current_weapon} - Damage: {current_weapon_damage}")
-        choice = None
-        while choice not in ["yes", "no"]:
-            choice = input("Do you want to replace your current weapon with this one? (yes/no): ").lower()
-            if choice not in ["yes", "no"]:
-                print("Please respond with 'yes' or 'no'.")
+        if isinstance(drop, Weapon):
+            # Handle weapon drop
+            new_weapon = drop
+            print("A chest has been opened!")
+            print(f"Inside, you find a new weapon: {new_weapon.name} - Damage: {new_weapon.damage}")
+            print(f"Your current weapon: {self.current_weapon.name} - Damage: {self.current_weapon.damage}")
 
+            choice = None
+            while choice not in ["yes", "no"]:
+                choice = input("Do you want to replace your current weapon with this one? (yes/no): ").lower()
+                if choice not in ["yes", "no"]:
+                    print("Please respond with 'yes' or 'no'.")
 
-        if choice == "yes":
-            self.current_weapon = new_weapon
-            print(f"You have equipped the new weapon: {self.current_weapon} - Damage: {new_weapon_damage}")
-        else:
-            print(f"You decided to keep your current weapon. The {new_weapon} has been discarded.")
+            if choice == "yes":
+                self.current_weapon = new_weapon
+                print(f"You have equipped the new weapon: {self.current_weapon.name} - Damage: {self.current_weapon.damage} ")
+            else:
+                print(f"You decided to keep your current weapon. The {new_weapon.name} has been discarded.")
         
+        elif isinstance(drop, dict):  # It's a potion
+            # Handle potion drop
+            potion = drop
+            self.add_potion(potion)
+            print(f"You received a {potion['name']}!")
 
     
 
