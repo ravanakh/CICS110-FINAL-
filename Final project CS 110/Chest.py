@@ -13,6 +13,7 @@ class Chest():
             self.potion = self.generate_random_potion()
 
     def generate_random_weapon(self):
+        # Select rarity based on some weights
         rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary']
         rarity_weights = [50, 30, 15, 4, 1]
         chosen_rarity = random.choices(rarities, weights=rarity_weights, k=1)[0]
@@ -24,10 +25,14 @@ class Chest():
             "Epic": ["Dragon Slayer", "Shadow Fang", "Entangled Staff"],
             "Legendary": ["Excalibur", "Godslayer", "Demon's Lust"],
         }
-        name = random.choice(weapon_names[chosen_rarity])
-        base_damage = random.randint(5, 20)
-        return Weapon(name, chosen_rarity, base_damage, self.room_level)
 
+        name = random.choice(weapon_names[chosen_rarity])
+        base_damage = random.randint(5, 15)  # Random base damage for simplicity
+
+        # Create the weapon object with the calculated damage
+        return Weapon(name, chosen_rarity, base_damage, self.room_level)
+    
+    
     def generate_random_potion(self):
         potion_names = ['Small Healing Potion', 'Large Healing Potion', 'Defense Potion']
         potion_effects = {
@@ -40,6 +45,8 @@ class Chest():
 
     def get_drop(self):
         if self.drop_type == 'weapon':
-            return self.weapon  # Return weapon if drop_type is weapon
+            return self.weapon
+        elif self.drop_type == 'potion':
+            return self.potion
         else:
-            return self.potion  # Return potion if drop_type is potion
+            raise ValueError(f"Unexpected drop_type: {self.drop_type}")
