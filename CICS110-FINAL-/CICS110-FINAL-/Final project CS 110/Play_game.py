@@ -267,6 +267,6 @@ class PlayGame:
             self.player.stamina = player_data["stamina"]
             self.player.dodge_chance = player_data["dodge_chance"]
             self.player.blessing = player_data["blessing"]
-            print("Game loaded!")
+            return True 
         except FileNotFoundError:
-            print("No save file found.")
+            raise FileNotFoundError("Save file not found.") 
