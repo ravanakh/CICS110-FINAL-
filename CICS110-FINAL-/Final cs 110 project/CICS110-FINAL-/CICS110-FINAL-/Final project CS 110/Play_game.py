@@ -61,7 +61,7 @@ class PlayGame:
         print(f"\n{player_health:<35} {ultimate_charge:<40} {enemy_health}")
         
     
-    def display_stamina_bar(self, stamina, max_stamina):
+    def display_stamina_bar(self, stamina, max_stamina): #stamina
         bar_length = 20  
         filled_length = int(bar_length * stamina // max_stamina)  
         bar = '░' * filled_length + '-' * (bar_length - filled_length)  
@@ -81,7 +81,7 @@ class PlayGame:
         print(f"Dodge Chance: {self.player.dodge_chance * 100:.1f}%")  
         print("=" * 40)
         
-    def handle_boss(self, final_boss=False):
+    def handle_boss(self, final_boss=False): 
         if final_boss:
             enemy = Enemy.create_boss(self.current_stage, self.current_room)
         else:
@@ -101,7 +101,7 @@ class PlayGame:
         if not final_boss:
             self.reward_player()
     
-    def display_health_bar(self, health, max_health):
+    def display_health_bar(self, health, max_health): #health
         bar_length = 20  
         filled_length = int(bar_length * health // max_health)  
         bar = '█' * filled_length + '-' * (bar_length - filled_length)  
@@ -111,6 +111,10 @@ class PlayGame:
     def handle_turn(self, enemy_instances):
         remaining_enemies = [enemy for enemy in enemy_instances if enemy.health > 0]
 
+        #player_health_bar = self.display_health_bar(self.player.health, self.player.max_hp)
+        #player_stamina_bar = self.display_stamina_bar(self.player.stamina, 100)
+        #enemy_health_bar = self.display_health_bar(self, enemy.health, enemy.max_health)
+        
         while remaining_enemies:
             enemy = remaining_enemies[0]  
             print("=" * 40)
@@ -125,18 +129,29 @@ class PlayGame:
             # Player's turn
             print("\nYour turn!")
             print("=" * 40)
-            print("Choose an action:")
-            print("1. Attack (5 Stamina)")
-            print("2. Dodge (Regain 20 Stamina)")
-            print("3. Use Potion")
-            if self.player.ultimate_ready and not self.player.ultimate_used:
-                print("4. Use Ultimate Attack (70 Stamina)")
+            print(f'''                 +----------------------------------------------------------------------------------+
+                                                                                                   
+                                                                 {enemy.name} 👾🐉        
+                                                                 {self.display_health_bar(enemy.health, enemy.max_health)}  
+                                                                                                   
+                                                                                                   
+                                                                                                   
+                                                                                                   
+                 YOU 🛡️🤺                                                                       
+                 {self.display_health_bar(self.player.health, self.player.max_hp)}                                          
+                 {self.display_stamina_bar(self.player.stamina, 100)}                                          
+                 +----------------------------------------------------------------------------------+
+                 |   Attack ⚔️ [1]  |  Defend 🛡️ [2]  |  Use a Potion 🧪[3]  |  Ultimate Attack 💥[4] |
+                 +----------------------------------------------------------------------------------+''')
+            
+            
             print("=" * 40)
 
             while True:
                 choice = input("Choose an action (1, 2, 3, or 4): ").strip()
 
                 if choice == "1":  # Attack
+                    print("\n\n")
                     if self.player.stamina >= 5:
                         result = self.player.attack(enemy) 
                         print(result)
@@ -144,21 +159,28 @@ class PlayGame:
                     else:
                         print("Not enough stamina to attack! Choose another action.")
                 elif choice == "2": 
+                    print("\n\n")
+                    print(f"{enemy.name}'s turn!")
                     result = self.player.dodge(enemy.damage)
                     print(result)
+                    time.sleep(1)
                     break  
                 elif choice == "3": 
+                    print("\n\n")
                     if any(item for item in self.player.inventory if "Potion" in item):  
                         result = self.player.use_potion() 
                         print(result)
                         self.display_player_stats()
+                        time.sleep(1.5)
                         break  
                     else:
                         print("No potions left in your inventory! Choose another action.")
                 elif choice == "4" and self.player.ultimate_ready and not self.player.ultimate_used:
+                    print("\n\n")
                     if self.player.stamina >= 70:
                         result = self.player.ultimate_attack(enemy) 
                         print(result)
+                        time.sleep(1)
                         break 
                     else:
                         print("Not enough stamina to use your ultimate! Choose another action.")
@@ -168,12 +190,22 @@ class PlayGame:
             if enemy.health <= 0:
                 print(f"{enemy.name} has been defeated!")
                 remaining_enemies.pop(0)  
+                
+            elif choice == '2' and 'successfully' in result: 
+                time.sleep(1)
+                print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+                continue
+            elif choice == '2' and 'failed' in result: 
+                time.sleep(1)
+                print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+                continue       
             else:
                 print(f"{enemy.name}'s turn!")
                 print("=" * 40)
                 result = self.player.got_hit(enemy.damage)
                 print(result)
                 time.sleep(1)  
+                print("\n\n\n\n\n\n\n\n\n")
 
                 if self.player.health <= 0:
                     print("You have been defeated... Game over!")
@@ -185,22 +217,27 @@ class PlayGame:
         
     
     def reward_player(self):
+        print("+----------------------------------------------------------------------------------+")
         print("\nYou have cleared the room! Time for a reward!")
         self.player.complete_stage_one()
 
         potion = Chest(room_level=self.current_room).generate_random_potion()  
         self.player.add_potion(potion) 
 
+        print("+--------------------------------------------------------------+") 
         print(f"You received a {potion['name']}!")
-        print(f"Potions in inventory after addition: {self.player.inventory}")
+        print(f"Potions in inventory after addition: {self.player.inventory}") 
+        time.sleep(1)
 
         if random.random() < 0.7:
             weapon = Chest(room_level=self.current_room).generate_random_weapon()
-            print(f"Inside the chest, you find a new weapon: {weapon.name} - Damage: {weapon.damage}")
+            print("+---------------------------------------------------------------------------------------------------------+") 
+            print(f"Inside the chest 🎁💎, you find a new weapon ⚔️: {weapon.name} - Damage: {weapon.damage}")
             print(f"Your current weapon: {self.player.current_weapon.name} - Damage: {self.player.current_weapon.damage}")
 
             choice = None
             while choice not in ["yes", "no"]:
+                print("+--------------------------------------------------------------------------+") 
                 choice = input("Do you want to replace your current weapon with this one? (yes/no): ").strip().lower()
                 if choice not in ["yes", "no"]:
                     print("Please respond with 'yes' or 'no'.")
@@ -215,6 +252,7 @@ class PlayGame:
         heal_amount = self.player.max_hp * 0.30
         self.player.health = min(self.player.max_hp, self.player.health + heal_amount)
         print(f"You have been healed for {heal_amount:.0f} HP!")
+        time.sleep(1)
         
         
     def save_game(self):

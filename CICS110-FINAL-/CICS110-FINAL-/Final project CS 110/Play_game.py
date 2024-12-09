@@ -61,7 +61,7 @@ class PlayGame:
         print(f"\n{player_health:<35} {ultimate_charge:<40} {enemy_health}")
         
     
-    def display_stamina_bar(self, stamina, max_stamina):
+    def display_stamina_bar(self, stamina, max_stamina): #stamina
         bar_length = 20  
         filled_length = int(bar_length * stamina // max_stamina)  
         bar = '░' * filled_length + '-' * (bar_length - filled_length)  
@@ -81,7 +81,7 @@ class PlayGame:
         print(f"Dodge Chance: {self.player.dodge_chance * 100:.1f}%")  
         print("=" * 40)
         
-    def handle_boss(self, final_boss=False):
+    def handle_boss(self, final_boss=False): 
         if final_boss:
             enemy = Enemy.create_boss(self.current_stage, self.current_room)
         else:
@@ -101,7 +101,7 @@ class PlayGame:
         if not final_boss:
             self.reward_player()
     
-    def display_health_bar(self, health, max_health):
+    def display_health_bar(self, health, max_health): #health
         bar_length = 20  
         filled_length = int(bar_length * health // max_health)  
         bar = '█' * filled_length + '-' * (bar_length - filled_length)  
@@ -111,6 +111,10 @@ class PlayGame:
     def handle_turn(self, enemy_instances):
         remaining_enemies = [enemy for enemy in enemy_instances if enemy.health > 0]
 
+        #player_health_bar = self.display_health_bar(self.player.health, self.player.max_hp)
+        #player_stamina_bar = self.display_stamina_bar(self.player.stamina, 100)
+        #enemy_health_bar = self.display_health_bar(self, enemy.health, enemy.max_health)
+        
         while remaining_enemies:
             enemy = remaining_enemies[0]  
             print("=" * 40)
@@ -125,12 +129,22 @@ class PlayGame:
             # Player's turn
             print("\nYour turn!")
             print("=" * 40)
-            print("Choose an action:")
-            print("1. Attack (5 Stamina)")
-            print("2. Dodge (Regain 20 Stamina)")
-            print("3. Use Potion")
-            if self.player.ultimate_ready and not self.player.ultimate_used:
-                print("4. Use Ultimate Attack (70 Stamina)")
+            print(f'''                 +----------------------------------------------------------------------------------+
+                                                                                                   
+                                                                 {enemy.name} 👾🐉        
+                                                                 {self.display_health_bar(enemy.health, enemy.max_health)}  
+                                                                                                   
+                                                                                                   
+                                                                                                   
+                                                                                                   
+                 YOU 🛡️🤺                                                                       
+                 {self.display_health_bar(self.player.health, self.player.max_hp)}                                          
+                 {self.display_stamina_bar(self.player.stamina, 100)}                                          
+                 +----------------------------------------------------------------------------------+
+                 |   Attack ⚔️ [1]  |  Defend 🛡️ [2]  |  Use a Potion 🧪[3]  |  Ultimate Attack 💥[4] |
+                 +----------------------------------------------------------------------------------+''')
+            
+            
             print("=" * 40)
 
             while True:
