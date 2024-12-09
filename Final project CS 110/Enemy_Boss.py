@@ -34,15 +34,15 @@ class Enemy:
 
     def generate_enemy(self, stage, room_number):
         if room_number <= 4:
-            health_scaling = 50 + (stage * 5) + (room_number * 5)
+            health_scaling = 50 + (stage * random.randint(3,8)) + (room_number * 5)
             damage_scaling = 10 + (stage * 2) + (room_number * 1)
-            defense_scaling = 3 + (stage * 1) + (room_number * 1)
+            defense_scaling = 3 + (stage * random.randint(1,2)) + (room_number * 1)
             dodge_chance = random.uniform(0.1, 0.2)
             can_heal = random.random() < 0.2
         else:
-            health_scaling = 150 + (stage * 30) + (room_number * 15)
-            damage_scaling = 30 + (stage * 5) + (room_number * 3)
-            defense_scaling = 20 + (stage * 3) + (room_number * 2)
+            health_scaling = 150 + (stage * 30) + (room_number * random.randint(13,18))
+            damage_scaling = 30 + (stage * 5) + (room_number * random.randint(3,5))
+            defense_scaling = 20 + (stage * 3) + (room_number * random.randint(2,4))
             dodge_chance = random.uniform(0.05, 0.1)
             can_heal = random.random() < 0.2
 
@@ -51,7 +51,7 @@ class Enemy:
 
     def create_boss(self, stage, room_number):
         if room_number <= 4:
-            health_scaling = 50 + (stage * 7) + (room_number * 5)
+            health_scaling = 50 + (stage * 7) + (room_number * random.randint(3,10))
             damage_scaling = 30 + (stage * 3) + (room_number * 5)
             defense_scaling = 10 + (stage * 2) + (room_number * 3)
             dodge_chance = random.uniform(0.1, 0.2)
@@ -67,36 +67,24 @@ class Enemy:
                      defense=defense_scaling, boss=True, dodge_chance=dodge_chance, can_heal=True)
     
     def assign_to_room(self, stage, room_number):
-        enemies = []  # List to store the enemies in the room
+        enemies = []  
         if room_number == 8:
-            # Room 8 gets a boss, no random enemies
             enemies.append(self.create_boss(stage, room_number))
         else:
-            # Random number of enemies (1 to 3)
             num_enemies = random.randint(1, 3)
-            print(f"Generating {num_enemies} enemies for room {room_number}...")  # Debug line to check number of enemies
+            print(f"Generating {num_enemies} enemies for room {room_number}...")  
             for _ in range(num_enemies):
-                # Create a normal enemy
                 enemies.append(self.generate_enemy(stage, room_number))
 
         return enemies
 
     def take_damage(self, amount):
-        if self.try_dodge():  # Enemy dodges the attack
-            return f"{self.name} dodged the attack!"
-
-        # Calculate effective damage after applying defense
         effective_damage = max(0, amount - self.defense)
-
-        # Apply the damage and ensure health doesn't go below 0
         self.health = max(0, self.health - effective_damage)
 
-        # Check if the enemy has been defeated
         if self.health == 0:
-            return f"{self.name} has been defeated!"  # Inform player that enemy is defeated
-
-        # Return the damage taken and the remaining health
-        return f"{self.name} took {effective_damage} damage and has {self.health}/{self.max_health} HP remaining."
+            print(f"{self.name} has been defeated!")
+            return
 
     def render_stats(self):
         return (f"{'Boss' if self.boss else 'Enemy'}: {self.name}\n"
@@ -106,8 +94,7 @@ class Enemy:
                 f"Dodge Chance: {self.dodge_chance * 100:.1f}%")
 
     def try_dodge(self):
-        # Reduce the dodge chance for testing purposes or adjust based on difficulty
-        dodge_chance = self.dodge_chance * 0.5  # Reduce dodge chance by half, for example
+        dodge_chance = self.dodge_chance * 0.5 
         return random.random() < dodge_chance
 
     def choose_action(self, player):

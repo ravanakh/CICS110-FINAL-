@@ -14,9 +14,9 @@ class Player():
         self.health = health
         self.max_hp = max_hp
         self.damage = damage 
-        self.current_hp = max_hp
+        self.current_hp = health
         self.defense = defense
-        self.inventory = []
+        self.inventory = {}
         self.stamina = 100
         self.status_effects = {}
         self.is_blocking = False
@@ -45,16 +45,23 @@ class Player():
             return f"You took {reduce_damage} damage."
         
     def add_potion(self, potion):
-        self.inventory.append(potion)
-        print(f"Added {potion['name']} to your inventory!")
+        potion_name = potion['name']
+        potion_effect = potion['effect']
         
+        if potion_name in self.inventory:
+            self.inventory[potion_name] += 1 
+        else:
+            self.inventory[potion_name] = 1  
+
+        print(f"Added {potion_name} to your inventory!")
+
     def use_potion(self):
         if not self.inventory:
-            return "No potions left in your inventory!"  # Return if inventory is empty
+            return "No potions left in your inventory!" 
 
         print("\nAvailable Potions:")
-        for idx, potion in enumerate(self.inventory, start=1):
-            print(f"{idx}. {potion['name']}")
+        for idx, (potion_name, quantity) in enumerate(self.inventory.items(), start=1):
+            print(f"{idx}. {potion_name} - Quantity: {quantity}")
 
         choice = None
         while choice not in range(1, len(self.inventory) + 1):
@@ -62,20 +69,35 @@ class Player():
                 choice = int(input(f"Choose a potion to use (1-{len(self.inventory)}): "))
             except ValueError:
                 print("Invalid input. Please enter a number.")
+        potion_name = list(self.inventory.keys())[choice - 1]
+        potion_quantity = self.inventory[potion_name]  
 
-        selected_potion = self.inventory.pop(choice - 1)
-        
-        if "Healing" in selected_potion['name']:
-            healed_amount = min(selected_potion['effect'], self.max_hp - self.current_hp)
-            self.current_hp += healed_amount
-            return f"You used {selected_potion['name']} and healed for {healed_amount} HP!"
-        elif "Defense" in selected_potion['name']:
-            self.defense += selected_potion['effect']
-            return f"You used {selected_potion['name']} and gained {selected_potion['effect']} defense for this room!"
-                
+        potion_effects = {
+            'Small Healing Potion': 20,
+            'Large Healing Potion': 50,
+            'Defense Potion': 10
+        }
+
+        potion_effect = potion_effects.get(potion_name, 0)  
+
+        if 'Healing' in potion_name:
+            healed_amount = min(potion_effect, self.max_hp - self.health)
+            self.health += healed_amount
+            print(f"You used {potion_name} and healed for {healed_amount} HP!")
+
+        elif 'Defense' in potion_name:
+            self.defense += potion_effect 
+            print(f"You used {potion_name} and gained {potion_effect} defense!")
+
+        if self.inventory[potion_name] > 1:
+            self.inventory[potion_name] -= 1 
+        else:
+            del self.inventory[potion_name]  
+        return f"{potion_name} used."
+            
     def block(self):
         self.is_blocking = True
-        self.stamina = min(100, self.stamina + 20)  # Gain stamina when blocking
+        self.stamina = min(100, self.stamina + 20) 
         return "You brace yourself, reducing incoming damage and recovering stamina!"
     
     def apply_status_effects(self):
@@ -99,11 +121,9 @@ class Player():
     def dodge(self, enemy_damage):
         if self.dodge_chance <= 0:
             return "You cannot evade!"
+        self.stamina = min(100, self.stamina + 20)  
         
-        # Always regain 20 stamina when dodging
-        self.stamina = min(100, self.stamina + 20)  # Regain 20 stamina, capped at 100
-        
-        if random.random() < self.dodge_chance:  # Successful dodge
+        if random.random() < self.dodge_chance: 
             return "You successfully dodged the attack and regained 20 stamina!"
         
         # Failed dodge
@@ -120,29 +140,31 @@ class Player():
 
     
     def attack(self, enemy):
-        if self.stamina < 5:  # Not enough stamina
+        if self.stamina < 5:  
             return "Not enough stamina to attack! Use dodge to regain stamina."
 
-        self.stamina -= 5  # Deduct stamina for attack
+        self.stamina -= 5  
 
-        if enemy.try_dodge():  # Enemy successfully dodges
+        if enemy.try_dodge():
             return f"{enemy.name} dodged your attack!"
 
-        # Calculate critical hit
-        is_critical = random.random() < 0.2  # 20% chance for a critical hit
+        is_critical = random.random() < 0.2  
         crit_multiplier = random.uniform(1.1, 1.5) if is_critical else 1.0
+        raw_damage = int(self.damage * crit_multiplier)  
+        net_damage = max(0, raw_damage - enemy.defense)  
 
-        # Calculate final damage considering defense
-        raw_damage = int(self.damage * crit_multiplier)  # Raw damage before defense
-        net_damage = max(0, raw_damage - enemy.defense)  # Damage after defense
+        enemy.take_damage(raw_damage)
 
-        enemy.take_damage(raw_damage)  # Apply the net damage to the enemy
-        self.increment_turn()  # Increment turn for player mechanics
+        self.increment_turn()
 
-        # Return appropriate message
         if is_critical:
             return f"Critical hit! You dealt {net_damage} damage to {enemy.name}!"
         return f"You attacked {enemy.name} and dealt {net_damage} damage!"
+
+    def equip_weapon(self, new_weapon):
+        self.current_weapon = new_weapon
+        print(f"You have equipped the new weapon: {self.current_weapon.name} - Damage: {self.current_weapon.damage}")
+        
         
     def increment_turn(self):
         self.turns_charging += 1
@@ -156,12 +178,12 @@ class Player():
             return "Your ultimate attack is not ready yet!"
         if self.ultimate_used:
             return "You can only use your ultimate once per room."
-        if self.stamina < 70:  # Check stamina
+        if self.stamina < 70: 
             return "Not enough stamina to use your ultimate! Use dodge to regain stamina."
 
-        self.stamina -= 70  # Deduct stamina for the ultimate attack
+        self.stamina -= 70  
         ultimate_damage = self.damage * 5
-        ultimate_damage = max(0, ultimate_damage - enemy.defense)  # Consider enemy defense
+        ultimate_damage = max(0, ultimate_damage - enemy.defense)  
         enemy.take_damage(ultimate_damage)
         self.reset_ultimate_attack()
 
@@ -314,14 +336,12 @@ class Player():
     def open_chest(self, chest):
         drop = chest.get_drop()
 
-        # Handle weapon drop
         if isinstance(drop, Weapon):
             new_weapon = drop
             print("A chest has been opened!")
             print(f"Inside, you find a new weapon: {new_weapon.name} - Damage: {new_weapon.damage}")
             print(f"Your current weapon: {self.current_weapon.name} - Damage: {self.current_weapon.damage}")
 
-            # Ask the player if they want to equip the new weapon
             choice = None
             while choice not in ["yes", "no"]:
                 choice = input("Do you want to replace your current weapon with this one? (yes/no): ").lower()
@@ -334,13 +354,11 @@ class Player():
             else:
                 print(f"You decided to keep your current weapon. The {new_weapon.name} has been discarded.")
 
-        # Handle potion drop
-        elif isinstance(drop, dict):  # It's a potion
+        elif isinstance(drop, dict):  
             potion = drop
             self.add_potion(potion)
             print(f"You received a {potion['name']}!")
 
-        # If no valid drop (just in case)
         else:
             print("Error: The chest does not contain valid loot.")
 

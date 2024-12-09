@@ -20,7 +20,6 @@ class Weapon:
         if self.rarity not in rarity_multiplier:
             raise ValueError(f"Invalid rarity '{self.rarity}'. Expected one of {list(rarity_multiplier.keys())}")
 
-        # Damage calculation considering rarity and room level
         return int(self.base_damage * rarity_multiplier[self.rarity] * (1 + self.room_level / 10))
     
     def __str__(self):

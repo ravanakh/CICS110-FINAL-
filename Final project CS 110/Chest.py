@@ -27,9 +27,7 @@ class Chest():
         }
 
         name = random.choice(weapon_names[chosen_rarity])
-        base_damage = random.randint(5, 15)  # Random base damage for simplicity
-
-        # Create the weapon object with the calculated damage
+        base_damage = random.randint(5, 15) 
         return Weapon(name, chosen_rarity, base_damage, self.room_level)
     
     
