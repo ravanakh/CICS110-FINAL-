@@ -6,14 +6,15 @@ class MainMenuScreen:
         print("1. Play Game")
         print("2. Instructions")
         print("3. Quit")
+        print("4. Load Game")
         print("==============================")
 
     def get_choice(self):
         choice = None
-        while choice not in ["1", "2", "3"]:
-            choice = input("Please select an option (1, 2, or 3): ")
-            if choice not in ["1", "2", "3"]:
-                print("Invalid choice. Please choose 1, 2, or 3.")
+        while choice not in ["1", "2", "3", "4"]:
+            choice = input("Please select an option (1, 2, 3, or 4): ")
+            if choice not in ["1", "2", "3", "4"]:
+                print("Invalid choice. Please choose 1, 2, 3, or 4.")
         return choice
 
     def instructions(self):

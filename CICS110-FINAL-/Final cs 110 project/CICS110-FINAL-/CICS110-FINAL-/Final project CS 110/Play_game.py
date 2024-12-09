@@ -50,7 +50,8 @@ class PlayGame:
             print(f"\nYou defeated {enemy_instance.name}!")
 
         print(f"\nRoom {self.current_room} cleared!")
-        self.reward_player()  
+        self.reward_player() 
+        self.save_game() 
         
         
     def display_stats(self, enemy):
@@ -196,6 +197,9 @@ class PlayGame:
                 print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
                 continue
             elif choice == '2' and 'failed' in result: 
+                if self.player.health <= 0:
+                    print("You have been defeated... Game over!")
+                    exit()
                 time.sleep(1)
                 print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
                 continue       
@@ -291,6 +295,6 @@ class PlayGame:
             self.player.stamina = player_data["stamina"]
             self.player.dodge_chance = player_data["dodge_chance"]
             self.player.blessing = player_data["blessing"]
-            print("Game loaded!")
+            return True 
         except FileNotFoundError:
-            print("No save file found.")
+            raise FileNotFoundError("Save file not found.") 
