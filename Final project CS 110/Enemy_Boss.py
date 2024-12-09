@@ -33,7 +33,7 @@ class Enemy:
         return f"{self.name} attacked but applied no status effect."
 
     def generate_enemy(self, stage, room_number):
-        if room_number <= 4:
+        if room_number < 4:
             health_scaling = 50 + (stage * random.randint(3,8)) + (room_number * 5)
             damage_scaling = 10 + (stage * 2) + (room_number * 1)
             defense_scaling = 3 + (stage * random.randint(1,2)) + (room_number * 1)
@@ -50,7 +50,7 @@ class Enemy:
                      defense=defense_scaling, dodge_chance=dodge_chance, can_heal=can_heal)
 
     def create_boss(self, stage, room_number):
-        if room_number <= 4:
+        if room_number == 4:
             health_scaling = 50 + (stage * 7) + (room_number * random.randint(3,10))
             damage_scaling = 30 + (stage * 3) + (room_number * 5)
             defense_scaling = 10 + (stage * 2) + (room_number * 3)
@@ -68,7 +68,7 @@ class Enemy:
     
     def assign_to_room(self, stage, room_number):
         enemies = []  
-        if room_number == 8:
+        if (room_number == 8) or (room_number == 4):
             enemies.append(self.create_boss(stage, room_number))
         else:
             num_enemies = random.randint(1, 3)

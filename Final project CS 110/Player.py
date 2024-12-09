@@ -178,13 +178,14 @@ class Player():
             return "Your ultimate attack is not ready yet!"
         if self.ultimate_used:
             return "You can only use your ultimate once per room."
-        if self.stamina < 70: 
+        if self.stamina < 70:
             return "Not enough stamina to use your ultimate! Use dodge to regain stamina."
 
         self.stamina -= 70  
+
         ultimate_damage = self.damage * 5
-        ultimate_damage = max(0, ultimate_damage - enemy.defense)  
-        enemy.take_damage(ultimate_damage)
+        ultimate_damage = max(0, ultimate_damage - enemy.defense) 
+        enemy.take_damage(ultimate_damage)  
         self.reset_ultimate_attack()
 
         return f"You used your ultimate and dealt {ultimate_damage} damage to {enemy.name}!"
@@ -192,8 +193,8 @@ class Player():
             
     def reset_ultimate_attack(self):
         self.ultimate_used = True
-        self.ultimate_ready = False
-        self.turns_charging = 0
+        self.ultimate_ready = False 
+        self.turns_charging = 0  
         
     def render_stats(self):
         return f"Health: {self.health}/{self.max_hp}, Damage: {self.damage}, Defense: {self.defense}"

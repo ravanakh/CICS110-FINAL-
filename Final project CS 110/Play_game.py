@@ -26,6 +26,9 @@ class PlayGame:
             
             
     def handle_room(self):
+        self.player.turns_charging = 0
+        self.player.ultimate_ready = False
+        self.player.ultimate_used = False
         enemy = Enemy("dummy", 0, 0, 0)
         enemy_instances = enemy.assign_to_room(self.current_stage, self.current_room)
 
